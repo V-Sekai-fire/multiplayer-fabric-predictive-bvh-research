@@ -9,7 +9,6 @@
 import PredictiveBVHResearch.Spatial.Partition
 import PredictiveBVHResearch.Spatial.Tree
 import PredictiveBVHResearch.Spatial.RefitIncremental
-import PredictiveBVHResearch.Protocol.Build
 import PredictiveBVHResearch.Protocol.Saturate
 import PredictiveBVHResearch.Protocol.Fabric
 import PredictiveBVHResearch.Interest.AuthorityInterest
