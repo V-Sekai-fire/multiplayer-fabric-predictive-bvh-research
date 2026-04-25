@@ -11,6 +11,10 @@ import PredictiveBVHResearch.Spatial.Partition
 -- Uses worklist algorithm to reach fixed point.
 -- ============================================================================
 
+/-- Sentinel cost for a freshly-bootstrapped EClass with no nodes yet. Any
+    real partition cost is well below this. -/
+private def maxCost : Int := 2 ^ 63
+
 /-- E-graph saturation state. -/
 structure SaturateState where
   nodes     : Array PartitionNode := #[]
@@ -25,7 +29,7 @@ def SaturateState.addNode (s : SaturateState) (node : PartitionNode) (classId : 
   | none => s
   | some cost =>
     let oldClass := if classId < s.classes.size then s.classes[classId]! else
-      { id := classId, nodes := #[], minCost := Int.maxVal, bestNode := none,
+      { id := classId, nodes := #[], minCost := maxCost, bestNode := none,
         bounds := { minX := 0, maxX := 1, minY := 0, maxY := 1, minZ := 0, maxZ := 1 },
         firstCode := 0, lastCode := 0 }
     let newNodeId := s.nodes.size
@@ -33,7 +37,7 @@ def SaturateState.addNode (s : SaturateState) (node : PartitionNode) (classId : 
     let (newMinCost, newBestNode) := if cost < oldClass.minCost then (cost, some newNodeId) else (oldClass.minCost, oldClass.bestNode)
     let newClass := { oldClass with nodes := newNodes, minCost := newMinCost, bestNode := newBestNode }
     let newClasses := if classId < s.classes.size then
-      s.classes.set classId newClass
+      s.classes.set! classId newClass
     else
       s.classes.push newClass
     { s with nodes := s.nodes.push node, classes := newClasses }
@@ -45,15 +49,15 @@ def SaturateState.isSaturated (s : SaturateState) : Bool :=
 /-- Get the root EClass (lowest cost among all classes). -/
 def SaturateState.getRootClass (s : SaturateState) : Option EClassId :=
   if s.classes.isEmpty then none
-  else
-    let mut bestId := 0
-    let mut bestCost := s.classes[0]!'.minCost
+  else Id.run do
+    let mut bestId : EClassId := 0
+    let mut bestCost : Int := s.classes[0]!.minCost
     for i in List.range s.classes.size do
-      let cost := s.classes[i]!'.minCost
+      let cost := s.classes[i]!.minCost
       if cost < bestCost then
         bestId := i
         bestCost := cost
-    some bestId
+    return some bestId
 
 -- ── AV1-style axis variant rewrite ─────────────────────────────────────────
 --
@@ -70,11 +74,11 @@ private def axisVariants (node : PartitionNode) : List PartitionNode :=
   | .horz  p l r => [.vert p l r, .depth p l r]
   | .vert  p l r => [.horz p l r, .depth p l r]
   | .depth p l r => [.horz p l r, .vert  p l r]
-  | other        => []
+  | _            => []
 
 /-- One saturation pass: for every EClass, try axis variants of each
     2-way node.  Returns the updated state and whether any cost improved. -/
-def SaturateState.axisRewritePass (s : SaturateState) : SaturateState × Bool :=
+def SaturateState.axisRewritePass (s : SaturateState) : SaturateState × Bool := Id.run do
   let mut state := s
   let mut improved := false
   for classId in List.range s.classes.size do
@@ -89,7 +93,7 @@ def SaturateState.axisRewritePass (s : SaturateState) : SaturateState × Bool :=
           state := state.addNode variant classId
     if state.classes[classId]!.minCost < oldCost then
       improved := true
-  (state, improved)
+  return (state, improved)
 
 /-- Run axis variant saturation until fixed point (no cost improves).
     Bounded by `fuel` iterations to guarantee termination. -/

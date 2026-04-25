@@ -22,14 +22,18 @@ green while preserving the work for incremental repair.
 
 | Path | Status | Source |
 |---|---|---|
-| `PredictiveBVHResearch/Spatial/Partition.lean` | broken | `PredictiveBVH/Spatial/Partition.lean` |
+| `PredictiveBVHResearch/Spatial/Partition.lean` | green | `PredictiveBVH/Spatial/Partition.lean` |
 | `PredictiveBVHResearch/Spatial/Tree.lean` | broken | `PredictiveBVH/Spatial/Tree.lean` |
 | `PredictiveBVHResearch/Spatial/RefitIncremental.lean` | broken (depends on Tree) | `PredictiveBVH/Spatial/RefitIncremental.lean` |
-| `PredictiveBVHResearch/Protocol/Build.lean` | broken | `PredictiveBVH/Protocol/Build.lean` |
-| `PredictiveBVHResearch/Protocol/Saturate.lean` | broken | `PredictiveBVH/Protocol/Saturate.lean` |
+| `PredictiveBVHResearch/Protocol/Saturate.lean` | green | `PredictiveBVH/Protocol/Saturate.lean` |
 | `PredictiveBVHResearch/Protocol/Fabric.lean` | broken | `PredictiveBVH/Protocol/Fabric.lean` |
 | `PredictiveBVHResearch/Interest/AuthorityInterest.lean` | broken | `PredictiveBVH/Interest/AuthorityInterest.lean` |
 | `PredictiveBVHResearch/Relativistic/ReBAC.lean` | broken | `PredictiveBVH/Relativistic/ReBAC.lean` |
+
+The original `PredictiveBVH/Protocol/Build.lean` was deleted on import:
+it was checked in with dangling references to helpers (`predictiveSAHK`,
+`classBoundsOf`) that were never defined anywhere in either repo, and
+nothing else imports any of the symbols it declares.
 
 The Lean `namespace` declarations inside each file are unchanged
 (`namespace PredictiveBVH …`), so the names declared inside still live under
